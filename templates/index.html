@@ -1,0 +1,129 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <title>Cover Template for Bootstrap</title>
+
+        <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">    
+        <link href="{{ url_for('static', filename='css/style.css')}}" rel="stylesheet">
+        <script src="{{ url_for('static', filename='js/atrament.js')}}"></script>
+    </head>
+    
+      <body class="text-center" cz-shortcut-listen="true">
+    
+        <div class="cover-container d-flex h-100 p-3 mx-auto flex-column" id="master">
+          <header class="masthead mb-auto">
+            <div class="inner">
+              <h3 class="masthead-brand">Cover</h3>
+              <nav class="nav nav-masthead justify-content-center">
+                <a class="nav-link active" href="#">Home</a>
+                <a class="nav-link" href="#">Features</a>
+                <a class="nav-link" href="#">Contact</a>
+              </nav>
+            </div>
+          </header>
+    
+          <main role="main" class="inner cover">
+            <!-- <h1 class="cover-heading">Cover your page.</h1>
+            <p class="lead">Cover is a one-page template for building simple and beautiful home pages. Download, edit the text, and add your own fullscreen background photo to make it your own.</p>
+            <p class="lead">
+              <a href="#" class="btn btn-lg btn-secondary">Learn more</a>
+            </p> -->
+            <canvas id="sketchpad" height="280" width="280"></canvas>
+            <div style="padding: 15px">
+                <button class='btn btn-primary' id='predict'>Predict</button>
+            </div>
+          </main>
+    
+          <footer class="mastfoot mt-auto">
+            <div class="inner">
+              <p id="answer">Answer</p>
+            </div>
+          </footer>
+        </div>
+    
+    
+        <!-- Bootstrap core JavaScript
+        ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+        <!-- Latest compiled and minified CSS -->
+
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- <script src="https://raw.githubusercontent.com/ja -->
+    </body>
+</html>
+<script>
+    var sketcher = atrament('#sketchpad');
+    sketcher.weight = 10;
+    var btn = document.getElementById('predict');
+    btn.onclick = function(){
+        console.log('Hello');
+        var dataURL = sketcher.toImage();
+        var image = document.createElement("img")
+        image.src = dataURL;
+        image.style.height = '28px';
+        image.style.width = '28px';
+        image.style.visibility = 'hidden';
+        // document.getElementById('master').appendChild(image)
+        var imageData = document.getElementById('sketchpad').getContext('2d').getImageData(0,0,280,280);
+        var greyData = [];
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0);
+        var imgData= context.getImageData(0, 0, 28, 28).data;
+        console.log(imageData)
+        for(let i = 3; i < imageData.data.length; i+=4){
+            greyData.push(imageData.data[i]);
+        }
+        console.log(greyData);
+        var greyDataArr = []
+        for(let i=0;i<280;i++){
+            let arr = []
+            for(let j=0;j<280;j++){
+                arr.push(greyData[i*280 + j])
+            }
+            greyDataArr.push(arr)
+        }
+        console.log(greyDataArr)
+        var pixelData = []
+        for(let i=9;i<280;i+=10){
+            let value=0;
+            for(let j=9;j<280;j+=10){
+                for(let k=0;k<=9;k++){
+                    for(let g=0;g<=9;g++){
+                        value+=greyDataArr[i-9+k][j-9+g];
+                    }
+                }
+                value=value/100;
+                if(value>255)
+                  pixelData.push(255);
+                else
+                  pixelData.push(value);
+            }
+        }
+        
+        for(let i=0;i<pixelData.length;i++)
+            pixelData[i]=Math.floor(pixelData[i])
+        console.log(pixelData);
+
+        $.ajax({
+            method: "get",
+            url: `/predict?Data=${pixelData}`,
+            success: function(result){
+                document.getElementById('answer').innerHTML=result;
+            }
+        })
+        sketcher.clear();
+    }
+</script>
